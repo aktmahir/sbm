@@ -1,0 +1,25 @@
+.productList__row {
+  display: flex;
+  flex-wrap: wrap;
+}
+.productList__side {
+  flex: 30%;
+  background-color: #f1f1f1;
+  padding: 20px;
+}
+.productList__main {
+  flex: 70%;
+  background-color: white;
+  padding: 20px;
+}
+.productList__fakeimg {
+  background-color: #aaa;
+  width: 100%;
+  height: 100px;
+  padding: 20px;
+}
+@media screen and (max-width: 660px) {
+  .productList__row {
+    flex-direction: column;
+  }
+}
