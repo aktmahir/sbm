@@ -11,7 +11,6 @@ import Toolbar from "@material-ui/core/Toolbar";
 import IconButton from "@material-ui/core/IconButton";
 import Typography from "@material-ui/core/Typography";
 import CloseIcon from "@material-ui/icons/Close";
-import EditIcon from "@material-ui/icons/Edit";
 import Slide from "@material-ui/core/Slide";
 import InsertDriveFileIcon from "@material-ui/icons/InsertDriveFile";
 import "./AddProduct.css";
@@ -60,7 +59,6 @@ export default function AddHomePageSlider({ openAdd }) {
     const [progress, setProgress] = useState(0);
     const [uploading, setUploading] = useState(false);
     const [imageArray, setImageArray] = useState([]);
-    const [allSlides, setAllSlides] = useState([]);
     const [slideData, setSlideData] = useState({
         id: "",
         title: "",
@@ -75,10 +73,9 @@ export default function AddHomePageSlider({ openAdd }) {
         if (!openAdd && open) {
             setOpen(false);
         }
-    }, [openAdd]);
+    }, [openAdd, home.data.slides]);
 
     const loadDataOnlyOnce = () => {
-        setAllSlides(home?.slides);
         setSlideData({ ...slideData, id: home?.id })
     };
 
@@ -98,7 +95,7 @@ export default function AddHomePageSlider({ openAdd }) {
         }));
     };
     const handleUpload = ({ file }) => {
-        const uploadTask = storage.ref(`slide-images/${file.name}`).put(file);
+        const uploadTask = storage.ref(`slide_images/${file.name}`).put(file);
         uploadTask.on(
             "state_changed",
             (snapshot) => {
@@ -112,12 +109,13 @@ export default function AddHomePageSlider({ openAdd }) {
             },
             () => {
                 storage
-                    .ref("slide-images")
+                    .ref("slide_images")
                     .child(file.name)
                     .getDownloadURL()
                     .then((imageUrl) => {
                         const item = { name: file.name, url: imageUrl };
                         setImageArray(() => [item]);
+                        //  setSlideData({ slideData, slide: imageUrl });
                     });
             }
         );
@@ -129,26 +127,31 @@ export default function AddHomePageSlider({ openAdd }) {
     };
 
     const handleDBUpload = () => {
-        let array = allSlides;
+        let array = home.data.slides;
         array.push({
             title: slideData.title,
-            slide: slideData.slide,
+            slide: imageArray[0].url,
             state: slideData.state,
             created: new Date().toLocaleString(),
         });
         let data = {
             slides: array,
         };
-        console.log(array);
         db.collection("home")
-            .doc(slideData.id)
+            .doc(home.id)
             .update(data)
-            .then((newProduct) => {
-                console.log(newProduct);
+            .then(() => {
                 setUploading(false);
-                alert("Slayt güncellendi " + newProduct?.id);
+                alert("Slayt güncellendi " + home.id);
                 dispatch({ type: "RELOAD_TRUE" });
                 setOpen(false);
+                setSlideData({
+                    id: "",
+                    title: "",
+                    slide: "",
+                    state: "",
+                });
+                setImageArray([]);
             })
             .catch((err) => {
                 console.log(err);
@@ -160,20 +163,18 @@ export default function AddHomePageSlider({ openAdd }) {
         e.preventDefault();
         if (e.target.files) {
             const file = e.target.files[0];
-            setImage(file);
             handleUpload({ file: file });
 
-            const url = URL.createObjectURL(file);
-            setImageArray(() => [
-                { name: file.name, url: url },
-            ]);
-            URL.revokeObjectURL(file) // avoid memory leak
+            // const url = URL.createObjectURL(file);
+            // setImageArray(() => [
+            //      { name: file.name, url: url },
+            // ]);
+            // URL.revokeObjectURL(file) // avoid memory leak
         }
     };
 
     const renderPhotos = () => {
         return imageArray?.map((photo) => {
-            console.log(photo.url);
             return <img className="img" src={photo.url} alt="" key={photo?.url} />;
         });
     };
@@ -181,7 +182,7 @@ export default function AddHomePageSlider({ openAdd }) {
     return (
         <div>
             <Button variant="outlined" color="primary" onClick={handleClickOpen}>
-                Anasayfa Slide Düzenle <EditIcon />
+                Anasayfa Slayt Ekle
             </Button>
             <Dialog
                 fullScreen
@@ -201,8 +202,8 @@ export default function AddHomePageSlider({ openAdd }) {
                                 <CloseIcon />
                             </IconButton>
                             <Typography variant="h6" className={classes.title}>
-                                Anasayfa Slide Düzenle
-              </Typography>
+                                Anasayfa Slayt Ekle
+                            </Typography>
                             <Button
                                 disabled={uploading}
                                 autoFocus
@@ -211,7 +212,7 @@ export default function AddHomePageSlider({ openAdd }) {
                                 onClick={handleSubmit}
                             >
                                 Kaydet
-              </Button>
+                            </Button>
                         </Toolbar>
                     </AppBar>
                     <List>
@@ -246,7 +247,7 @@ export default function AddHomePageSlider({ openAdd }) {
                                     >
                                         <option value="default" disabled>
                                             Durumu
-                    </option>
+                                        </option>
                                         <option value="active">Aktif</option>
                                         <option value="passive">Pasif</option>
                                     </select>

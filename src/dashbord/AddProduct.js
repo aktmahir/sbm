@@ -106,7 +106,7 @@ export default function AddProduct({ openAdd }) {
     }));
   };
   const handleUpload = ({ file, count }) => {
-    const uploadTask = storage.ref(`images/${file.name}`).put(file);
+    const uploadTask = storage.ref(`product_images/${file.name}`).put(file);
     uploadTask.on(
       "state_changed",
       (snapshot) => {
@@ -120,7 +120,7 @@ export default function AddProduct({ openAdd }) {
       },
       () => {
         storage
-          .ref("images")
+          .ref("product_images")
           .child(file.name)
           .getDownloadURL()
           .then((imageUrl) => {

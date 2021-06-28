@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
@@ -16,6 +16,7 @@ import InsertDriveFileIcon from "@material-ui/icons/InsertDriveFile";
 import "./AddProduct.css";
 import { db, storage } from "../firebase";
 import { useStateValue } from "../components/StateProvider";
+import JoditEditor from "jodit-react";
 
 
 const useStyles = makeStyles((theme) => ({
@@ -51,41 +52,37 @@ const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function AddSubCategory({ openAdd }) {
-    const [{ companies, categories }, dispatch] = useStateValue();
+export default function AddHomePageContent({ openAdd }) {
+    const [{ home, products, companies, categories }, dispatch] =
+        useStateValue();
 
     const classes = useStyles();
     const [open, setOpen] = useState(false);
-    const [image, setImage] = useState(null);
     const [progress, setProgress] = useState(0);
     const [uploading, setUploading] = useState(false);
-    const dateObj = new Date();
-    const month = dateObj.getUTCMonth() + 1; //months from 1-12
-    const year = dateObj.getUTCFullYear();
-
-    const minYear = "1950-1";
-    const maxYear = year + "-" + month;
-
-    const [selectedFiles, setSelectedFiles] = useState([]);
-    const [selectedFiles1, setSelectedFiles1] = useState([]);
     const [imageArray, setImageArray] = useState([]);
-    const [newCategoryData, setNewCategoryData] = useState({
+    const [contentData, setContentData] = useState({
+        id: "",
         title: "",
-        parentCategory: "",
-        categoryProperties: "",
-        categoryInfo: "",
-        categoryImages: [],
-        state: "active",
-        created: new Date().toLocaleString(),
+        type: "",
+        content: "",
+        images: "",
+        state: "",
     });
     useEffect(() => {
+        loadDataOnlyOnce();
         if (openAdd && !open) {
             setOpen(true);
         }
         if (!openAdd && open) {
             setOpen(false);
         }
-    }, [openAdd]);
+    }, [openAdd, home.data.homeContent]);
+
+    const loadDataOnlyOnce = () => {
+        setContentData({ ...contentData, id: home?.id })
+    };
+
 
     const handleClose = () => {
         setOpen(false);
@@ -96,13 +93,13 @@ export default function AddSubCategory({ openAdd }) {
     const handleChange = (e) => {
         const value = e.target.value;
         const id = e.target.id;
-        setNewCategoryData((prewState) => ({
+        setContentData((prewState) => ({
             ...prewState,
             [id]: value,
         }));
     };
-    const handleUpload = ({ file, count }) => {
-        const uploadTask = storage.ref(`subcategory_images/${file.name}`).put(file);
+    const handleUpload = ({ file }) => {
+        const uploadTask = storage.ref(`content_images/${file.name}`).put(file);
         uploadTask.on(
             "state_changed",
             (snapshot) => {
@@ -116,15 +113,13 @@ export default function AddSubCategory({ openAdd }) {
             },
             () => {
                 storage
-                    .ref("subcategory_images")
+                    .ref("content_images")
                     .child(file.name)
                     .getDownloadURL()
                     .then((imageUrl) => {
                         const item = { name: file.name, url: imageUrl };
+                        // setImageArray(() => [item]);
                         setImageArray((preArray) => [...preArray, item]);
-                        // if (count === 0) {
-                        //handleDBUpload({ images: imageArray });
-                        // }
                     });
             }
         );
@@ -132,51 +127,40 @@ export default function AddSubCategory({ openAdd }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         setUploading(true);
-        // if (Array.isArray(selectedFiles1) && selectedFiles1?.length > 0) {
-        //  let count = selectedFiles?.length;
-        //  selectedFiles1?.map((file) => {
-        //   count--;
-        //    setImage(file);
-        //    handleUpload({ file: file, count: count });
-        //  });
-        //} else {
-        handleDBUpload({ images: imageArray });
-        //}
+        handleDBUpload();
     };
 
-    const handleDBUpload = ({ images }) => {
-        const data = {
-            title: newCategoryData?.title,
-            parentCategory: newCategoryData?.parentCategory,
-            categoryProperties: newCategoryData?.categoryProperties,
-            categoryInfo: newCategoryData?.categoryInfo,
-            categoryImages: imageArray || images,
-            state: newCategoryData?.state,
-            created: newCategoryData?.created,
+    const handleDBUpload = () => {
+        let array = home.data.homeContent;
+        array.push({
+            title: contentData.title,
+            type: contentData.type,
+            content: contentData.content,
+            images: imageArray,
+            state: contentData.state,
+            created: new Date().toLocaleString(),
+        });
+        let data = {
+            homeContent: array,
         };
-        console.log(imageArray);
-        console.log(images);
-
-        db.collection("sub_categories")
-            .add(data)
-            .then((newProduct) => {
+        db.collection("home")
+            .doc(home.id)
+            .update(data)
+            .then(() => {
                 setUploading(false);
-                alert("Yeni kategori eklendi " + newProduct?.id);
+                alert("Slayt güncellendi " + home.id);
                 dispatch({ type: "RELOAD_TRUE" });
                 setOpen(false);
-                setImage(null);
-                setImageArray([]);
-                setNewCategoryData({
+                setContentData({
+                    id: "",
                     title: "",
-                    parentCategory: "",
-                    categoryProperties: "",
-                    categoryInfo: "",
-                    categoryImages: [],
-                    state: "active",
-                    created: new Date().toLocaleString(),
+                    type: "",
+                    content: "",
+                    images: "",
+                    state: "",
+                    created: "",
                 });
-                setSelectedFiles([]);
-                setSelectedFiles1([]);
+                setImageArray([]);
             })
             .catch((err) => {
                 console.log(err);
@@ -184,11 +168,11 @@ export default function AddSubCategory({ openAdd }) {
             });
     };
 
-
-
     const handleImageChange = (e) => {
         e.preventDefault();
         if (e.target.files) {
+            //const file = e.target.files[0];
+            //handleUpload({ file: file });
             let newArray = [];
             let count;
             for (let i = 0; i < e.target.files.length; i++) {
@@ -196,7 +180,7 @@ export default function AddSubCategory({ openAdd }) {
                 count = i + 1;
                 let newItem = e.target.files[i];
                 newArray.push(newItem);
-                setSelectedFiles1(newArray);
+
                 if (
                     count === e.target.files.length ||
                     newArray.length === e.target.files.length
@@ -205,30 +189,27 @@ export default function AddSubCategory({ openAdd }) {
                     let count1 = newArray?.length;
                     newArray?.map((file) => {
                         count1--;
-                        setImage(file);
                         handleUpload({ file: file, count: count1 });
                     });
                 }
             }
-            const filesArray = Array.from(e.target.files).map((file) =>
-                URL.createObjectURL(file)
-            );
-            setSelectedFiles((prevImages) => prevImages.concat(filesArray));
-            Array.from(e.target.files).map(
-                (file) => URL.revokeObjectURL(file) // avoid memory leak
-            );
+
         }
     };
 
-    const renderPhotos = (source) => {
-        return source.map((photo) => {
-            return <img className="img" src={photo} alt="" key={photo} />;
+    const renderPhotos = () => {
+        return imageArray?.map((photo) => {
+            return <img className="img" src={photo.url} alt="" key={photo?.url} />;
         });
     };
+
+    const editor = useRef(null);
+    const config = { readonly: false };
+
     return (
         <div>
             <Button variant="outlined" color="primary" onClick={handleClickOpen}>
-                Alt Kategori Ekle
+                Anasayfa İçerik Ekle
             </Button>
             <Dialog
                 fullScreen
@@ -248,7 +229,7 @@ export default function AddSubCategory({ openAdd }) {
                                 <CloseIcon />
                             </IconButton>
                             <Typography variant="h6" className={classes.title}>
-                                Alt Kategori Ekle
+                                Anasayfa İçerik Ekle
                             </Typography>
                             <Button
                                 disabled={uploading}
@@ -265,12 +246,13 @@ export default function AddSubCategory({ openAdd }) {
                         <ListItem className={classes.input}>
                             <ListItemText
                                 className={classes.inputText}
-                                primary="Kategori İsmi"
+                                primary="İçerik Başlığı"
                                 secondary={
                                     <input
                                         required
-                                        placeholder="Kategori İsmi"
+                                        placeholder="İçerik Başlığı"
                                         className={classes.inputField}
+                                        value={contentData?.title}
                                         type="text"
                                         id="title"
                                         onChange={handleChange}
@@ -282,66 +264,99 @@ export default function AddSubCategory({ openAdd }) {
                         <ListItem className={classes.input}>
                             <ListItemText
                                 className={classes.inputText}
-                                primary="Üst Kategori"
+                                primary="İçerik Tipi"
                                 secondary={
                                     <select
                                         required
                                         className={classes.inputField}
-                                        id="parentCategory"
-                                        defaultValue="default"
+                                        id="type"
+                                        value={contentData?.type || "default"}
                                         onChange={handleChange}
                                     >
                                         <option value="default" disabled>
-                                            Üst Kategori
+                                            İçerik
                                         </option>
-                                        {Array.isArray(categories) && categories.map((company) => {
-                                            return (
-                                                <option value={company.id}>{company.data.title}</option>
-                                            )
-                                        })}
+                                        <option value="product">Makine / Ürün</option>
+                                        <option value="category">Kategori</option>
+                                        <option value="company">Şirket</option>
+                                        <option value="other">Diğer(Duyuru, Haber vb.)</option>
                                     </select>
                                 }
                             />
                         </ListItem>
                         <Divider />
-                        <ListItem className={classes.input}>
+                        {contentData?.type === "other" ? <ListItem className={classes.input}>
                             <ListItemText
                                 className={classes.inputText}
-                                primary="Kategori Özellikleri"
+                                primary="İçerik"
                                 secondary={
-                                    <textarea
-                                        required
-                                        placeholder="Kategori Özellikleri"
-                                        className={classes.inputFieldArea}
-                                        type="text"
-                                        id="categoryProperties"
-                                        onChange={handleChange}
+                                    <JoditEditor
+                                        ref={editor}
+                                        value={contentData?.content}
+                                        config={config}
+                                        tabIndex={1}
+                                        onBlur={newContent => setContentData({
+                                            ...contentData,
+                                            content: newContent
+                                        })}
+                                        onChange={newContent => { }}
                                     />
                                 }
                             />
-                        </ListItem>
+                        </ListItem> : <ListItem className={classes.input}>
+                            <ListItemText
+                                className={classes.inputText}
+                                primary="İçerik"
+                                secondary={
+                                    <select
+                                        required
+                                        className={classes.inputField}
+                                        id="content"
+                                        value={contentData?.content}
+                                        onChange={handleChange}
+                                    >
+                                        <option value="default" disabled>
+                                            İçerik
+                                        </option>
+                                        {contentData.type === "product" ? Array.isArray(products) && products?.map(item => {
+                                            return <option value={item.id}>{item.data.title} </option>
+                                        }) : contentData.type === "category" ? Array.isArray(categories) && categories?.map(item => {
+                                            return <option value={item.id}>{item.data.title} </option>
+                                        }) : contentData.type === "company" ? Array.isArray(companies) && companies?.map(item => {
+                                            return <option value={item.id}>{item.data.title} </option>
+                                        }) : ""}
+                                    </select>
+                                }
+                            />
+                        </ListItem>}
+
                         <Divider />
                         <ListItem className={classes.input}>
                             <ListItemText
                                 className={classes.inputText}
-                                primary="Kategori Bilgileri"
+                                primary="Durumu"
                                 secondary={
-                                    <textarea
+                                    <select
                                         required
-                                        placeholder="Kategori Bilgileri"
-                                        className={classes.inputFieldArea}
-                                        type="text"
-                                        id="categoryInfo"
+                                        className={classes.inputField}
+                                        id="state"
+                                        value={contentData?.state || "default"}
                                         onChange={handleChange}
-                                    />
+                                    >
+                                        <option value="default" disabled>
+                                            Durumu
+                                        </option>
+                                        <option value="active">Aktif</option>
+                                        <option value="passive">Pasif</option>
+                                    </select>
                                 }
                             />
                         </ListItem>
                         <Divider />
-                        <ListItem className={classes.input}>
+                        {contentData?.type === "other" ? <ListItem className={classes.input}>
                             <ListItemText
                                 className={classes.inputText}
-                                primary="Kategori Fotografları"
+                                primary="İçerik Fotografı"
                                 secondary={
                                     <div>
                                         <input
@@ -355,11 +370,11 @@ export default function AddSubCategory({ openAdd }) {
                                                 <InsertDriveFileIcon />
                                             </label>
                                         </div>
-                                        <div className="result">{renderPhotos(selectedFiles)}</div>
+                                        <div className="result">{renderPhotos()}</div>
                                     </div>
                                 }
                             />
-                        </ListItem>
+                        </ListItem> : ""}
                         <Divider />
                     </List>
                 </form>

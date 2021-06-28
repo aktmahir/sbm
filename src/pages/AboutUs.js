@@ -1,8 +1,13 @@
 import React from "react";
 import "../css/AboutUs.css";
+import { useStateValue } from "../components/StateProvider";
+import renderHTML from "../components/renderHTML";
 
 function AboutUs() {
-  return <div className="aboutUs"></div>;
+  const [{ home }, dispach] = useStateValue();
+  return <div className="aboutUs">
+    {renderHTML(home.data.aboutUsContent)}
+  </div>;
 }
 
 export default AboutUs;

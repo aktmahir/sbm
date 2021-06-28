@@ -101,7 +101,7 @@ export default function AddCategory({ openAdd }) {
     }));
   };
   const handleUpload = ({ file, count }) => {
-    const uploadTask = storage.ref(`images/${file.name}`).put(file);
+    const uploadTask = storage.ref(`category_images/${file.name}`).put(file);
     uploadTask.on(
       "state_changed",
       (snapshot) => {
@@ -115,7 +115,7 @@ export default function AddCategory({ openAdd }) {
       },
       () => {
         storage
-          .ref("images")
+          .ref("category_images")
           .child(file.name)
           .getDownloadURL()
           .then((imageUrl) => {

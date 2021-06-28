@@ -103,7 +103,7 @@ export default function AddCompany({ openAdd }) {
     }));
   };
   const handleUpload = ({ file, count }) => {
-    const uploadTask = storage.ref(`images/${file.name}`).put(file);
+    const uploadTask = storage.ref(`company_images/${file.name}`).put(file);
     uploadTask.on(
       "state_changed",
       (snapshot) => {
@@ -117,7 +117,7 @@ export default function AddCompany({ openAdd }) {
       },
       () => {
         storage
-          .ref("images")
+          .ref("company_images")
           .child(file.name)
           .getDownloadURL()
           .then((imageUrl) => {
@@ -153,7 +153,7 @@ export default function AddCompany({ openAdd }) {
       companyProperties: newCompanyData?.companyProperties,
       isDealer: newCompanyData?.isDealer,
       companyInfo: newCompanyData?.companyInfo,
-      productImages: imageArray || images,
+      companyImages: imageArray || images,
       state: newCompanyData?.state,
       created: newCompanyData?.created,
     };

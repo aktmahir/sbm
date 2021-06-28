@@ -14,7 +14,7 @@ function Footer() {
   return (
     <footer className="footer-distributed">
       <div className="footer-left">
-        <Link to="/">
+        <Link className={{ textDecoration: "none" }} to="/">
           <img className="header__logo" src="logo.jpg" alt="Logo" />
           <h3>
             Ser&Bir<span>Makine</span>

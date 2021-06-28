@@ -11,6 +11,7 @@ function CheckoutProduct({
   rating,
   hideButton,
 }) {
+  // eslint-disable-next-line
   const [{ basket }, dispatch] = useStateValue();
 
   const removeFromBasket = () => {

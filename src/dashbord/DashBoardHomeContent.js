@@ -6,8 +6,8 @@ import TableCell from "@material-ui/core/TableCell";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Title from "./Title";
-import EditHomeSlider from "./EditHomeSlider";
-import AddHomePageSlider from "./AddHomePageSlider";
+import EditHomePageContent from "./EditHomePageContent";
+import AddHomePageContent from "./AddHomePageContent";
 import { useStateValue } from "../components/StateProvider";
 
 
@@ -21,29 +21,31 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export default function DashboardSlider() {
+export default function DashboardHomeContent() {
     const [{ reload, home }, dispatch] = useStateValue();
 
     const classes = useStyles();
     const setTable = () => {
         return (
             <TableBody>
-                {home.data.slides && Array.isArray(home.data.slides) && home.data.slides.map((slide, index) => {
+                {home?.data?.homeContent && Array.isArray(home?.data.homeContent) && home?.data.homeContent.map((content, index) => {
                     return (
-                        <TableRow key={slide?.id}>
-                            <TableCell>{slide.created}</TableCell>
-                            <TableCell>{slide.title}</TableCell>
+                        <TableRow key={content?.id}>
+                            <TableCell>{content?.created}</TableCell>
+                            <TableCell>{content?.title}</TableCell>
+                            <TableCell>{content?.type}</TableCell>
+                            <TableCell>{content?.type === "other" ? "....." : content?.content}</TableCell>
                             <TableCell>
-                                {slide.state === "active"
+                                {content?.state === "active"
                                     ? "Aktif"
-                                    : slide?.state === "deleted"
+                                    : content?.state === "deleted"
                                         ? "Silindi"
-                                        : slide?.state === "passive"
+                                        : content?.state === "passive"
                                             ? "Pasif"
                                             : "Hata"}
                             </TableCell>
                             <TableCell align="right">
-                                <EditHomeSlider key={slide.id} slide={slide} index={index} />
+                                <EditHomePageContent key={content?.id} content={content} index={index} />
                             </TableCell>
                         </TableRow>
                     );
@@ -55,15 +57,17 @@ export default function DashboardSlider() {
     return (
         <React.Fragment>
             <div className={classes.title}>
-                <Title>Bütün Slaytlar</Title>
+                <Title>Bütün Anasayfa İçerikleri</Title>
                 &nbsp;&nbsp;&nbsp;&nbsp;
-                <AddHomePageSlider />
+                <AddHomePageContent />
             </div>
             <Table size="small">
                 <TableHead>
                     <TableRow>
                         <TableCell>Eklenme Tarihi</TableCell>
                         <TableCell>İsim</TableCell>
+                        <TableCell>Tip</TableCell>
+                        <TableCell>İçerik</TableCell>
                         <TableCell>Aktiflik Durumu</TableCell>
                         <TableCell align="right">Düzenle</TableCell>
                     </TableRow>

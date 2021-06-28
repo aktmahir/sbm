@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
-import Link from "@material-ui/core/Link";
+import React
+  //, { useEffect, useState } 
+  from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
@@ -9,7 +10,6 @@ import TableRow from "@material-ui/core/TableRow";
 import Title from "./Title";
 import EditCategory from "./EditCategory";
 import AddCategory from "./AddCategory";
-import { db, storage } from "../firebase";
 import { useStateValue } from "../components/StateProvider";
 
 
@@ -24,7 +24,9 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function DashboardCategories() {
-  const [{ reload, categories }, dispatch] = useStateValue();
+  const [{ categories },
+    //  dispatch
+  ] = useStateValue();
 
   /*const [categories, setCategories] = useState([]);
   useEffect(() => {
@@ -83,7 +85,7 @@ export default function DashboardCategories() {
     <React.Fragment>
       <div className={classes.title}>
         <Title>Bütün Kategoriler</Title>
-                &nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;
         <AddCategory />
       </div>
       <Table size="small">

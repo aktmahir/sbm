@@ -132,7 +132,7 @@ export default function EditSubCategory({ openAdd, category }) {
     }));
   };
   const handleUpload = ({ file, count }) => {
-    const uploadTask = storage.ref(`images/${file.name}`).put(file);
+    const uploadTask = storage.ref(`subcategory_images/${file.name}`).put(file);
     uploadTask.on(
       "state_changed",
       (snapshot) => {
@@ -146,7 +146,7 @@ export default function EditSubCategory({ openAdd, category }) {
       },
       () => {
         storage
-          .ref("images")
+          .ref("subcategory_images")
           .child(file.name)
           .getDownloadURL()
           .then((imageUrl) => {

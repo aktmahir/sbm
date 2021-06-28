@@ -51,7 +51,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function EditHomeSlider({ openAdd, slide }) {
+export default function EditHomeSlider({ openAdd, slide, index }) {
   const [{ home }, dispatch] =
     useStateValue();
 
@@ -59,16 +59,14 @@ export default function EditHomeSlider({ openAdd, slide }) {
   const [open, setOpen] = useState(false);
   const [progress, setProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
-  const [imageArray, setImageArray] = useState([]);
   const [allSlides, setAllSlides] = useState([]);
   const [slideData, setSlideData] = useState({
-    id: "",
     title: "",
     slide: "",
     state: "",
     index: "",
-    created: "",
   });
+  const [indexNArray, setIndexNArray] = useState([]);
   useEffect(() => {
     loadDataOnlyOnce();
     if (openAdd && !open) {
@@ -77,24 +75,31 @@ export default function EditHomeSlider({ openAdd, slide }) {
     if (!openAdd && open) {
       setOpen(false);
     }
-  }, [openAdd]);
+    setIndexArray();
+  }, [openAdd, home.data.slides]);
+
+  const setIndexArray = () => {
+    let array = [];
+    if (home.data.slides && Array.isArray(home.data.slides)) {
+      for (let i = 0; i < home.data.slides.length; i++) {
+        array.push(i);
+        if (i === home.data.slides.length - 1) {
+          setIndexNArray(array);
+        }
+      }
+    }
+  }
 
   const loadDataOnlyOnce = () => {
-    const data = {
-      id: home?.id,
-      slide: slide?.slide,
-      state: slide?.state,
-      created: slide?.state,
-    };
-    console.log(data);
-    setSlideData(data);
-    setAllSlides(home?.data.slides);
-    setIndex();
+    setSlideData({
+      slide: slide.slide,
+      state: slide.state,
+      title: slide.title,
+      created: slide.created,
+      index: index,
+    });
+    setAllSlides(home.data.slides);
   };
-  const setIndex = () => {
-    const index = array.indexOf(slide);
-    setSlideData({ ...slideData, index: index });
-  }
 
   const handleClose = () => {
     setOpen(false);
@@ -111,7 +116,7 @@ export default function EditHomeSlider({ openAdd, slide }) {
     }));
   };
   const handleUpload = ({ file }) => {
-    const uploadTask = storage.ref(`slide-images/${file.name}`).put(file);
+    const uploadTask = storage.ref(`slide_images/${file.name}`).put(file);
     uploadTask.on(
       "state_changed",
       (snapshot) => {
@@ -125,12 +130,12 @@ export default function EditHomeSlider({ openAdd, slide }) {
       },
       () => {
         storage
-          .ref("slide-images")
+          .ref("slide_images")
           .child(file.name)
           .getDownloadURL()
           .then((imageUrl) => {
             const item = { name: file.name, url: imageUrl };
-            setImageArray(() => [item]);
+            setSlideData({ ...slideData, slide: imageUrl });
           });
       }
     );
@@ -143,8 +148,8 @@ export default function EditHomeSlider({ openAdd, slide }) {
 
   const handleDBUpload = () => {
     let array = allSlides;
-    //const index = array.indexOf(slide);
-    array.splice(slideData.index, 1, {
+    array.splice(index, 1);
+    array.splice(slideData.index, 0, {
       title: slideData.title,
       slide: slideData.slide,
       state: slideData.state,
@@ -153,14 +158,12 @@ export default function EditHomeSlider({ openAdd, slide }) {
     let data = {
       slides: array,
     };
-    console.log(array);
     db.collection("home")
-      .doc(slideData.id)
+      .doc(home.id)
       .update(data)
-      .then((newProduct) => {
-        console.log(newProduct);
+      .then(() => {
         setUploading(false);
-        alert("Slayt güncellendi " + newProduct?.id);
+        alert("Slayt güncellendi " + home.id);
         dispatch({ type: "RELOAD_TRUE" });
         setOpen(false);
       })
@@ -174,22 +177,12 @@ export default function EditHomeSlider({ openAdd, slide }) {
     e.preventDefault();
     if (e.target.files) {
       const file = e.target.files[0];
-      setImage(file);
       handleUpload({ file: file });
-
-      const url = URL.createObjectURL(file);
-      setImageArray(() => [
-        { name: file.name, url: url },
-      ]);
-      URL.revokeObjectURL(file) // avoid memory leak
     }
   };
 
   const renderPhotos = () => {
-    return imageArray?.map((photo) => {
-      console.log(photo.url);
-      return <img className="img" src={photo.url} alt="" key={photo?.url} />;
-    });
+    return <img className="img" src={slideData?.slide} alt="" />;
   };
 
   return (
@@ -246,6 +239,7 @@ export default function EditHomeSlider({ openAdd, slide }) {
                 }
               />
             </ListItem>
+            <Divider />
             <ListItem className={classes.input}>
               <ListItemText
                 className={classes.inputText}
@@ -263,6 +257,29 @@ export default function EditHomeSlider({ openAdd, slide }) {
                     </option>
                     <option value="active">Aktif</option>
                     <option value="passive">Pasif</option>
+                  </select>
+                }
+              />
+            </ListItem>
+            <Divider />
+            <ListItem className={classes.input}>
+              <ListItemText
+                className={classes.inputText}
+                primary="Durumu"
+                secondary={
+                  <select
+                    required
+                    className={classes.inputField}
+                    id="index"
+                    value={slideData?.index}
+                    onChange={handleChange}
+                  >
+                    <option value="default" disabled>
+                      Slayt Sırası
+                    </option>
+                    {Array.isArray(indexNArray) && indexNArray?.map(item => {
+                      return <option value={item}>{item + 1} </option>
+                    })}
                   </select>
                 }
               />

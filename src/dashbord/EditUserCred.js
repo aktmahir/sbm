@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
@@ -50,16 +50,13 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function EditUserCred({ openAdd, userCred }) {
-  const [{ }, dispatch] =
+export default function EditUserCred({ openAdd }) {
+  const [{ home }, dispatch] =
     useStateValue();
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [userCredData, setUserCredData] = useState({
-    id: "",
-    userCredContent: "",
-  });
+  const [userCredData, setUserCredData] = useState("");
   useEffect(() => {
     loadDataOnlyOnce();
     if (openAdd && !open) {
@@ -68,14 +65,10 @@ export default function EditUserCred({ openAdd, userCred }) {
     if (!openAdd && open) {
       setOpen(false);
     }
-  }, [openAdd]);
+  }, [openAdd, home.data.userCredContent]);
 
   const loadDataOnlyOnce = () => {
-    const data = {
-      id: userCred?.id,
-      userCredContent: userCred.userCredContent,
-    };
-    setUserCredData(data);
+    setUserCredData(home.data.userCredContent);
   };
 
   const handleClose = () => {
@@ -92,15 +85,15 @@ export default function EditUserCred({ openAdd, userCred }) {
 
   const handleDBUpload = () => {
     let data = {
-      userCredContent: userCredData?.userCredContent,
-      oldUserCred: userCred.userCredContent,
+      userCredContent: userCredData,
+      oldUserCred: home.data?.userCredContent || "",
     };
     db.collection("home")
-      .doc(userCredData.id)
+      .doc(home.id)
       .update(data)
-      .then((newAboutUs) => {
+      .then(() => {
         setUploading(false);
-        alert("Kullanıcı Gizlilik güncellendi " + newAboutUs?.id);
+        alert("Kullanıcı Gizlilik belgesi güncellendi " + home?.id);
         dispatch({ type: "RELOAD_TRUE" });
         setOpen(false);
       })
@@ -157,14 +150,11 @@ export default function EditUserCred({ openAdd, userCred }) {
                 secondary={
                   <JoditEditor
                     ref={editor}
-                    value={userCredData?.userCredContent}
+                    value={userCredData}
                     config={config}
                     tabIndex={1}
-                    onBlur={newContent => setUserCredData({
-                      ...userCredData,
-                      userCredContent: newContent
-                    })}
-                    onChange={newContent => { }}
+                    onBlur={newContent => setUserCredData(newContent)}
+                    onChange={() => { }}
                   />
                 }
               />

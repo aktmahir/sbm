@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
@@ -50,16 +50,13 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function EditAboutUs({ openAdd, aboutUs }) {
-  const [{ }, dispatch] =
+export default function EditAboutUs({ openAdd }) {
+  const [{ home }, dispatch] =
     useStateValue();
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [aboutUsData, setAboutUsData] = useState({
-    id: "",
-    aboutUsContent: "",
-  });
+  const [aboutUsData, setAboutUsData] = useState("");
   useEffect(() => {
     loadDataOnlyOnce();
     if (openAdd && !open) {
@@ -68,15 +65,10 @@ export default function EditAboutUs({ openAdd, aboutUs }) {
     if (!openAdd && open) {
       setOpen(false);
     }
-  }, [openAdd]);
+  }, [openAdd, home.data.aboutUsContent]);
 
   const loadDataOnlyOnce = () => {
-    const data = {
-      id: aboutUs?.id,
-      aboutUsContent: aboutUs.aboutUsContent,
-    };
-    console.log(data);
-    setAboutUsData(data);
+    setAboutUsData(home.data.aboutUsContent);
   };
 
   const handleClose = () => {
@@ -93,19 +85,18 @@ export default function EditAboutUs({ openAdd, aboutUs }) {
 
   const handleDBUpload = () => {
     let data = {
-      aboutUsContent: aboutUsData?.aboutUsContent,
-      oldAboutUs: aboutUs.aboutUsContent,
-      olderAboutUS: aboutUs.oldAboutUs,
+      aboutUsContent: aboutUsData,
+      oldAboutUs: home.data.aboutUsContent,
+      olderAboutUS: home.data.oldAboutUs,
     };
-    //data = aboutUsData;
     console.log(data);
     db.collection("home")
-      .doc(aboutUsData.id)
+      .doc(home.id)
       .update(data)
       .then((newAboutUs) => {
         console.log(newAboutUs);
         setUploading(false);
-        alert("Hakkımızda güncellendi " + newAboutUs?.id);
+        alert("Hakkımızda güncellendi " + home?.id);
         dispatch({ type: "RELOAD_TRUE" });
         setOpen(false);
       })
@@ -162,14 +153,11 @@ export default function EditAboutUs({ openAdd, aboutUs }) {
                 secondary={
                   <JoditEditor
                     ref={editor}
-                    value={aboutUsData?.aboutUsContent}
+                    value={aboutUsData}
                     config={config}
                     tabIndex={1}
-                    onBlur={newContent => setAboutUsData({
-                      ...aboutUsData,
-                      aboutUsContent: newContent
-                    })}
-                    onChange={newContent => { }}
+                    onBlur={newContent => setAboutUsData(newContent)}
+                    onChange={() => { }}
                   />
                 }
               />

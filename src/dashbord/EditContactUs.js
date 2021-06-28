@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
@@ -50,16 +50,13 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function EditContactUs({ openAdd, contactUs }) {
-  const [{ }, dispatch] =
+export default function EditContactUs({ openAdd }) {
+  const [{ home }, dispatch] =
     useStateValue();
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [contactUsData, setContactUsData] = useState({
-    id: "",
-    contactUsContent: "",
-  });
+  const [contactUsData, setContactUsData] = useState("");
   useEffect(() => {
     loadDataOnlyOnce();
     if (openAdd && !open) {
@@ -68,15 +65,10 @@ export default function EditContactUs({ openAdd, contactUs }) {
     if (!openAdd && open) {
       setOpen(false);
     }
-  }, [openAdd]);
+  }, [openAdd, home.data.contactUsContent]);
 
   const loadDataOnlyOnce = () => {
-    const data = {
-      id: contactUs?.id,
-      contactUsContent: contactUs.contactUsContent,
-    };
-    console.log(data);
-    setContactUsData(data);
+    setContactUsData(home.data.contactUsContent);
   };
 
   const handleClose = () => {
@@ -93,19 +85,17 @@ export default function EditContactUs({ openAdd, contactUs }) {
 
   const handleDBUpload = () => {
     let data = {
-      contactUsContent: contactUsData?.contactUsContent,
-      oldContactUs: contactUs.contactUsContent,
-      olderContactUs: contactUs.oldContactUs,
+      contactUsContent: contactUsData,
+      oldContactUs: home.data.contactUsContent,
+      olderContactUs: home.data.oldContactUs,
     };
-    //data = contactUsData;
-    console.log(data);
     db.collection("home")
-      .doc(contactUsData.id)
+      .doc(home.id)
       .update(data)
-      .then((newAboutUs) => {
-        console.log(newAboutUs);
+      .then((aaa) => {
+        console.log(aaa);
         setUploading(false);
-        alert("İletişim güncellendi " + newAboutUs?.id);
+        alert("İletişim güncellendi " + home?.id);
         dispatch({ type: "RELOAD_TRUE" });
         setOpen(false);
       })
@@ -162,14 +152,11 @@ export default function EditContactUs({ openAdd, contactUs }) {
                 secondary={
                   <JoditEditor
                     ref={editor}
-                    value={contactUsData?.contactUsContent}
+                    value={contactUsData}
                     config={config}
                     tabIndex={1}
-                    onBlur={newContent => setAboutUsData({
-                      ...contactUsData,
-                      contactUsContent: newContent
-                    })}
-                    onChange={newContent => { }}
+                    onBlur={newContent => setContactUsData(newContent)}
+                    onChange={() => { }}
                   />
                 }
               />

@@ -28,6 +28,12 @@ import DashboardCategories from "./DashboardCategories";
 import DashboardCompanies from "./DashboardCompanies";
 import DashboardSubCategories from "./DashboardSubCategories";
 import DashboardCategoryProp from "./DashboardCategoryProp";
+import DashboardSlider from "./DashboardSlider";
+import DashboardHomeContent from "./DashBoardHomeContent";
+import EditCookies from "./EditCookies";
+import EditContactUs from "./EditContactUs";
+import EditAboutUs from "./EditAboutUs";
+import EditUserCred from "./EditUserCred";
 import Accordion from "@material-ui/core/Accordion";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
@@ -375,7 +381,7 @@ export default function Dashboard() {
                 <Grid container spacing={1}>
                   <Grid item xs={12}>
                     <Paper className={classes.paper}>
-                      Anasayfada Görüntülenecekler
+                      <DashboardHomeContent />
                     </Paper>
                   </Grid>
                 </Grid>
@@ -393,7 +399,7 @@ export default function Dashboard() {
               <AccordionDetails>
                 <Grid container spacing={1}>
                   <Grid item xs={12}>
-                    <Paper className={classes.paper}>Slider</Paper>
+                    <Paper className={classes.paper}> <DashboardSlider /> </Paper>
                   </Grid>
                 </Grid>
               </AccordionDetails>
@@ -410,7 +416,7 @@ export default function Dashboard() {
               <AccordionDetails>
                 <Grid container spacing={1}>
                   <Grid item xs={12}>
-                    <Paper className={classes.paper}>İletişim</Paper>
+                    <Paper className={classes.paper}><EditContactUs /> </Paper>
                   </Grid>
                 </Grid>
               </AccordionDetails>
@@ -427,7 +433,7 @@ export default function Dashboard() {
               <AccordionDetails>
                 <Grid container spacing={1}>
                   <Grid item xs={12}>
-                    <Paper className={classes.paper}>Hakkımızda</Paper>
+                    <Paper className={classes.paper}><EditAboutUs /> </Paper>
                   </Grid>
                 </Grid>
               </AccordionDetails>
@@ -446,7 +452,7 @@ export default function Dashboard() {
               <AccordionDetails>
                 <Grid container spacing={1}>
                   <Grid item xs={12}>
-                    <Paper className={classes.paper}>Çerez Politikası</Paper>
+                    <Paper className={classes.paper}><EditCookies /> </Paper>
                   </Grid>
                 </Grid>
               </AccordionDetails>
@@ -465,7 +471,7 @@ export default function Dashboard() {
               <AccordionDetails>
                 <Grid container spacing={1}>
                   <Grid item xs={12}>
-                    <Paper className={classes.paper}>Gizlilik Politikası</Paper>
+                    <Paper className={classes.paper}><EditUserCred /> </Paper>
                   </Grid>
                 </Grid>
               </AccordionDetails>

@@ -7,6 +7,24 @@ export const initialState = {
   sub_categories: [],
   category_properties: [],
   adminArr: [],
+  home: {
+    id: "",
+    data: {
+      slides: [],
+      homeContent: [],
+      aboutUsContent: "",
+      oldAboutUs: "",
+      olderAboutUS: "",
+      contactUsContent: "",
+      oldContactUs: "",
+      olderContactUs: "",
+      cookiesContent: "",
+      oldCookies: "",
+      userCredContent: "",
+      oldUserCred: "",
+    },
+  },
+  adminArr: [],
   reload: true,
 };
 export const getBasketTotal = (basket) =>
@@ -49,6 +67,8 @@ const reducer = (state, action) => {
       return { ...state, category_properties: action.category_properties };
     case "SET_COMPANIES":
       return { ...state, companies: action.companies };
+    case "SET_HOME":
+      return { ...state, home: action.home };
     case "RELOAD_TRUE":
       return { ...state, reload: true };
     case "RELOAD_FALSE":

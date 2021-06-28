@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Link, useHistory } from "react-router-dom";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import "../css/Login.css";
+import { useStateValue } from "../components/StateProvider";
 
 function Login() {
+  const [{  }, dispach] = useStateValue();
   const history = useHistory();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +30,17 @@ function Login() {
       .createUserWithEmailAndPassword(email, password)
       .then((authen) => {
         if (authen) {
-          history.push("/");
+          db.collection("users")
+          .add({email: email})
+          .then((newUser) => {
+            if(newUser){
+              dispach({ type: "RELOAD_TRUE" });
+              history.push("/profil");
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+          });
         }
       })
       .catch((error) => alert(error.message));

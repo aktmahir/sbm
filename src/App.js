@@ -37,15 +37,15 @@ function App() {
         });
       }
     });
+    // eslint-disable-next-line
   }, []);
   useEffect(() => {
     getDataOnlyOnce();
+    // eslint-disable-next-line
   }, [reload]);
 
   const getDataOnlyOnce = () => {
-    let a,
-      b,
-      c = false;
+
     if (reload) {
       db.collection("products")
         .get()
@@ -115,6 +115,34 @@ function App() {
         .catch((err) => {
           console.log(err);
         });
+      db.collection("home")
+        .get()
+        .then((querySnapshot) => {
+          let data;
+          querySnapshot.forEach((doc) => {
+            data = {
+              id: doc.id, data: {
+                slides: doc.data().slides || [],
+                homeContent: doc.data().homeContent || [],
+                aboutUsContent: doc.data().aboutUsContent || "",
+                oldAboutUs: doc.data().oldAboutUs || "",
+                olderAboutUS: doc.data().olderAboutUS || "",
+                contactUsContent: doc.data().contactUsContent || "",
+                oldContactUs: doc.data().oldContactUs || "",
+                olderContactUs: doc.data().olderContactUs || "",
+                cookiesContent: doc.data().cookiesContent || "",
+                oldCookies: doc.data().oldCookies || "",
+                userCredContent: doc.data().userCredContent || "",
+                oldUserCred: doc.data().oldUserCred || "",
+              }
+            };
+          });
+
+          dispatch({ type: "SET_HOME", home: data });
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
     dispatch({ type: "RELOAD_FALSE" });
   };
@@ -162,7 +190,7 @@ function App() {
               <ProductView />
               <Footer />
             </Route>
-            <Route path="/profile">
+            <Route path="/profil">
               <Header />
               <Profile />
               <Footer />
@@ -216,7 +244,7 @@ function App() {
               <ProductView />
               <Footer />
             </Route>
-            <Route path="/profile">
+            <Route path="/profil">
               <Header />
               <Profile />
               <Footer />
@@ -270,7 +298,7 @@ function App() {
               <ProductView />
               <Footer />
             </Route>
-            <Route path="/profile">
+            <Route path="/profil">
               <Header />
               <Profile />
               <Footer />
@@ -324,7 +352,7 @@ function App() {
               <ProductView />
               <Footer />
             </Route>
-            <Route path="/profile">
+            <Route path="/profil">
               <Header />
               <Profile />
               <Footer />

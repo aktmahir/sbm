@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
@@ -10,11 +10,13 @@ import Toolbar from "@material-ui/core/Toolbar";
 import IconButton from "@material-ui/core/IconButton";
 import Typography from "@material-ui/core/Typography";
 import CloseIcon from "@material-ui/icons/Close";
-import EditIcon from "@material-ui/icons/Edit";
+import InsertDriveFileIcon from "@material-ui/icons/InsertDriveFile";
+import Divider from "@material-ui/core/Divider";
 import Slide from "@material-ui/core/Slide";
 import "./AddProduct.css";
 import { db, storage } from "../firebase";
 import { useStateValue } from "../components/StateProvider";
+import JoditEditor from "jodit-react";
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -49,21 +51,26 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function EditAboutUs({ openAdd, product }) {
-  const [{ companies, categories, category_properties }, dispatch] =
+export default function EditHomePageContent({ openAdd, content, index }) {
+  const [{ home, products, categories, companies, }, dispatch] =
     useStateValue();
 
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const [progress, setProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
-  const [productData, setProductData] = useState({
+  const [imageArray, setImageArray] = useState([]);
+  const [contentData, setContentData] = useState({
     id: "",
-    homeContent: {
-      recomendedProducts: [],
-      recomendedCategories: [],
-    },
+    title: "",
+    type: "",
+    content: "",
+    images: "",
+    index: "",
+    state: "",
   });
+  const [indexNArray, setIndexNArray] = useState([]);
+  const [allContent, setAllContent] = useState([]);
   useEffect(() => {
     loadDataOnlyOnce();
     if (openAdd && !open) {
@@ -72,16 +79,34 @@ export default function EditAboutUs({ openAdd, product }) {
     if (!openAdd && open) {
       setOpen(false);
     }
-  }, [openAdd]);
+    setIndexArray();
+  }, [openAdd, home.data.homeContent]);
 
+  const setIndexArray = () => {
+    let array = [];
+    if (home.data.slides && Array.isArray(home.data.slides)) {
+      for (let i = 0; i < home.data.slides.length; i++) {
+        array.push(i);
+        if (i === home.data.slides.length - 1) {
+          setIndexNArray(array);
+        }
+      }
+    }
+  }
   const loadDataOnlyOnce = () => {
-    const data = {
-      id: product?.id,
-      homeContent: product?.homeContent,
-    };
-    console.log(data);
-    setProductData(data);
+    setContentData({
+      content: content?.content,
+      type: content?.type,
+      state: content?.state,
+      title: content?.title,
+      created: content?.created,
+      images: content?.images,
+      index: index,
+    });
+    setAllContent(home.data.homeContent);
+    setImageArray(content?.images);
   };
+
 
   const handleClose = () => {
     setOpen(false);
@@ -92,43 +117,129 @@ export default function EditAboutUs({ openAdd, product }) {
   const handleChange = (e) => {
     const value = e.target.value;
     const id = e.target.id;
-    setProductData((prewState) => ({
+    setContentData((prewState) => ({
       ...prewState,
       [id]: value,
     }));
   };
+  const handleUpload = ({ file }) => {
+    const uploadTask = storage.ref(`content_images/${file.name}`).put(file);
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress = Math.round(
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+        );
+        setProgress(progress);
+      },
+      (error) => {
+        console.log(error);
+      },
+      () => {
+        storage
+          .ref("content_images")
+          .child(file.name)
+          .getDownloadURL()
+          .then((imageUrl) => {
+            const item = { name: file.name, url: imageUrl };
+            // setImageArray(() => [item]);
+            setImageArray((preArray) => [...preArray, item]);
+          });
+      }
+    );
+  };
   const handleSubmit = (e) => {
     e.preventDefault();
     setUploading(true);
-    handleDBUpload({ images: imageArray });
+    handleDBUpload();
   };
 
-  const handleDBUpload = ({ images }) => {
+  const handleDBUpload = () => {
+    let array = allContent;
+    array.splice(index, 1);
+    array.splice(contentData.index, 0, {
+      title: contentData.title,
+      content: contentData.content,
+      state: contentData.state,
+      type: contentData.type,
+      images: imageArray,
+      created: contentData.created,
+    });
+
     let data = {
-      homeContent: productData?.homeContent,
+      homeContent: array,
     };
-    data.productImages = imageArray || images;
-    console.log(data);
     db.collection("home")
-      .doc(productData.id)
+      .doc(home.id)
       .update(data)
-      .then((newProduct) => {
-        console.log(newProduct);
+      .then(() => {
         setUploading(false);
-        alert("Anasayfa güncellendi " + newProduct?.id);
+        alert("Slayt güncellendi " + home.id);
         dispatch({ type: "RELOAD_TRUE" });
         setOpen(false);
+        setContentData({
+          id: "",
+          title: "",
+          type: "",
+          content: "",
+          images: "",
+          state: "",
+          created: "",
+        });
+        setImageArray([]);
       })
       .catch((err) => {
         console.log(err);
         setUploading(false);
       });
   };
-  //// arr.splice(0,0,item)
+
+  const handleImageChange = (e) => {
+    e.preventDefault();
+    if (e.target.files) {
+      //const file = e.target.files[0];
+      //handleUpload({ file: file });
+      let newArray = [];
+      let count;
+      for (let i = 0; i < e.target.files.length; i++) {
+        console.log(i);
+        count = i + 1;
+        let newItem = e.target.files[i];
+        newArray.push(newItem);
+        if (
+          count === e.target.files.length ||
+          newArray.length === e.target.files.length
+        ) {
+          console.log(newArray);
+          let count1 = newArray?.length;
+          newArray?.map((file) => {
+            count1--;
+            handleUpload({ file: file, count: count1 });
+          });
+        }
+      }
+
+      // const url = URL.createObjectURL(file);
+      // setImageArray(() => [
+      //      { name: file.name, url: url },
+      // ]);
+      // URL.revokeObjectURL(file) // avoid memory leak
+    }
+  };
+
+  const renderPhotos = () => {
+    return imageArray?.map((photo) => {
+      return <img className="img" src={photo.url} alt="" key={photo?.url} />;
+    });
+  };
+
+  const editor = useRef(null);
+  const config = { readonly: false };
+
   return (
     <div>
       <Button variant="outlined" color="primary" onClick={handleClickOpen}>
-        <EditIcon />
+        Anasayfa İçerik Ekle
       </Button>
       <Dialog
         fullScreen
@@ -148,7 +259,7 @@ export default function EditAboutUs({ openAdd, product }) {
                 <CloseIcon />
               </IconButton>
               <Typography variant="h6" className={classes.title}>
-                Anasayfa Düzenle
+                Anasayfa İçerik Ekle
               </Typography>
               <Button
                 disabled={uploading}
@@ -165,13 +276,13 @@ export default function EditAboutUs({ openAdd, product }) {
             <ListItem className={classes.input}>
               <ListItemText
                 className={classes.inputText}
-                primary="Makine İsmi"
+                primary="İçerik Başlığı"
                 secondary={
                   <input
                     required
-                    placeholder="Makina İsmi"
+                    placeholder="İçerik Başlığı"
                     className={classes.inputField}
-                    value={productData?.title}
+                    value={contentData?.title}
                     type="text"
                     id="title"
                     onChange={handleChange}
@@ -179,6 +290,145 @@ export default function EditAboutUs({ openAdd, product }) {
                 }
               />
             </ListItem>
+            <Divider />
+            <ListItem className={classes.input}>
+              <ListItemText
+                className={classes.inputText}
+                primary="İçerik Tipi"
+                secondary={
+                  <select
+                    required
+                    className={classes.inputField}
+                    id="type"
+                    value={contentData?.type || "default"}
+                    onChange={handleChange}
+                  >
+                    <option value="default" disabled>
+                      İçerik
+                    </option>
+                    <option value="product">Makine / Ürün</option>
+                    <option value="category">Kategori</option>
+                    <option value="company">Şirket</option>
+                    <option value="other">Diğer(Duyuru, Haber vb.)</option>
+                  </select>
+                }
+              />
+            </ListItem>
+            <Divider />
+            {contentData?.type === "other" ? <ListItem className={classes.input}>
+              <ListItemText
+                className={classes.inputText}
+                primary="İçerik"
+                secondary={
+                  <JoditEditor
+                    ref={editor}
+                    value={contentData?.content}
+                    config={config}
+                    tabIndex={1}
+                    onBlur={newContent => setContentData({
+                      ...contentData,
+                      content: newContent
+                    })}
+                    onChange={newContent => { }}
+                  />
+                }
+              />
+            </ListItem> : <ListItem className={classes.input}>
+              <ListItemText
+                className={classes.inputText}
+                primary="İçerik"
+                secondary={
+                  <select
+                    required
+                    className={classes.inputField}
+                    id="content"
+                    value={contentData?.index}
+                    onChange={handleChange}
+                  >
+                    <option value="default" disabled>
+                      İçerik
+                    </option>
+                    {contentData.type === "product" ? Array.isArray(products) && products?.map(item => {
+                      return <option value={item.id}>{item.data.title} </option>
+                    }) : contentData.type === "category" ? Array.isArray(categories) && categories?.map(item => {
+                      return <option value={item.id}>{item.data.title} </option>
+                    }) : contentData.type === "company" ? Array.isArray(companies) && companies?.map(item => {
+                      return <option value={item.id}>{item.data.title} </option>
+                    }) : ""}
+                  </select>
+                }
+              />
+            </ListItem>}
+
+            <Divider />
+            <ListItem className={classes.input}>
+              <ListItemText
+                className={classes.inputText}
+                primary="Durumu"
+                secondary={
+                  <select
+                    required
+                    className={classes.inputField}
+                    id="state"
+                    value={contentData?.state || "default"}
+                    onChange={handleChange}
+                  >
+                    <option value="default" disabled>
+                      Durumu
+                    </option>
+                    <option value="active">Aktif</option>
+                    <option value="passive">Pasif</option>
+                  </select>
+                }
+              />
+            </ListItem>
+            <Divider />
+            <ListItem className={classes.input}>
+              <ListItemText
+                className={classes.inputText}
+                primary="İçerik Sırası"
+                secondary={
+                  <select
+                    required
+                    className={classes.inputField}
+                    id="index"
+                    value={contentData?.index}
+                    onChange={handleChange}
+                  >
+                    <option value="default" disabled>
+                      İçerik Sırası
+                    </option>
+                    {Array.isArray(indexNArray) && indexNArray?.map(item => {
+                      return <option value={item}>{item + 1} </option>
+                    })}
+                  </select>
+                }
+              />
+            </ListItem>
+            <Divider />
+            {contentData?.type === "other" ? <ListItem className={classes.input}>
+              <ListItemText
+                className={classes.inputText}
+                primary="İçerik Fotografı"
+                secondary={
+                  <div>
+                    <input
+                      type="file"
+                      id="file"
+                      multiple
+                      onChange={handleImageChange}
+                    />
+                    <div className="label-holder">
+                      <label htmlFor="file" className="label">
+                        <InsertDriveFileIcon />
+                      </label>
+                    </div>
+                    <div className="result">{renderPhotos()}</div>
+                  </div>
+                }
+              />
+            </ListItem> : ""}
+            <Divider />
           </List>
         </form>
       </Dialog>

@@ -1,17 +1,20 @@
 import React from "react";
 import Categories from "../components/Categories";
+import Companies from "../components/Companies";
 import ProductListProduct from "../components/ProductListProduct";
 import { useStateValue } from "../components/StateProvider";
 import "../css/ProductList.css";
 
 function ProductList() {
-  const [{ products, categories, sub_categories }, dispatch] = useStateValue();
+  const [{ products, categories, sub_categories, companies }, dispatch] = useStateValue();
   return (
     <div className="productList">
       <div className="productList__row">
         <div className="productList__side">
           <h3>Kategoriler</h3>
           <Categories categories={categories} sub_categories={sub_categories} />
+          <Companies companies={companies} />
+
         </div>
         <div className="productList__main">
           <h2>Makineler</h2>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
@@ -50,16 +50,13 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function EditCookies({ openAdd, cookies }) {
-  const [{ }, dispatch] =
+export default function EditCookies({ openAdd }) {
+  const [{ home }, dispatch] =
     useStateValue();
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [cookiesData, setCookiesData] = useState({
-    id: "",
-    cookiesContent: "",
-  });
+  const [cookiesData, setCookiesData] = useState("");
   useEffect(() => {
     loadDataOnlyOnce();
     if (openAdd && !open) {
@@ -68,14 +65,10 @@ export default function EditCookies({ openAdd, cookies }) {
     if (!openAdd && open) {
       setOpen(false);
     }
-  }, [openAdd]);
+  }, [openAdd, home.data.cookiesContent]);
 
   const loadDataOnlyOnce = () => {
-    const data = {
-      id: cookies?.id,
-      cookiesContent: cookies.cookiesContent,
-    };
-    setCookiesData(data);
+    setCookiesData(home.data.cookiesContent);
   };
 
   const handleClose = () => {
@@ -91,16 +84,17 @@ export default function EditCookies({ openAdd, cookies }) {
   };
 
   const handleDBUpload = () => {
+
     let data = {
-      cookiesContent: cookiesData?.cookiesContent,
-      oldCookies: cookies.cookiesContent,
+      cookiesContent: cookiesData,
+      oldCookies: home.data.cookiesContent,
     };
     db.collection("home")
-      .doc(cookiesData.id)
+      .doc(home.id)
       .update(data)
-      .then((newAboutUs) => {
+      .then(() => {
         setUploading(false);
-        alert("Cookies güncellendi " + newAboutUs?.id);
+        alert("Cookies güncellendi " + home?.id);
         dispatch({ type: "RELOAD_TRUE" });
         setOpen(false);
       })
@@ -157,14 +151,11 @@ export default function EditCookies({ openAdd, cookies }) {
                 secondary={
                   <JoditEditor
                     ref={editor}
-                    value={cookiesData?.cookiesContent}
+                    value={cookiesData}
                     config={config}
                     tabIndex={1}
-                    onBlur={newContent => setCookiesData({
-                      ...cookiesData,
-                      cookiesContent: newContent
-                    })}
-                    onChange={newContent => { }}
+                    onBlur={newContent => setCookiesData(newContent)}
+                    onChange={() => { }}
                   />
                 }
               />

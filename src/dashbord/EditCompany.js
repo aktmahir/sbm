@@ -90,14 +90,14 @@ export default function EditCompany({ openAdd, company }) {
       companyProperties: company?.data.companyProperties,
       isDealer: company?.data.isDealer,
       companyInfo: company?.data.companyInfo,
-      companyImages: company?.data.productImages,
+      companyImages: company?.data.companyImages,
       state: company?.data.state,
       created: company?.data.created,
     };
     console.log(data);
     setCompanyData(data);
-    setImageArray(company?.data.productImages);
-    setSelectedFiles(company?.data.productImages);
+    setImageArray(company?.data.companyImages);
+    setSelectedFiles(company?.data.companyImages);
 
     /* db.collection("companies")
        .doc(data?.uid)
@@ -131,7 +131,7 @@ export default function EditCompany({ openAdd, company }) {
     }));
   };
   const handleUpload = ({ file, count }) => {
-    const uploadTask = storage.ref(`images/${file.name}`).put(file);
+    const uploadTask = storage.ref(`company_images/${file.name}`).put(file);
     uploadTask.on(
       "state_changed",
       (snapshot) => {
@@ -145,7 +145,7 @@ export default function EditCompany({ openAdd, company }) {
       },
       () => {
         storage
-          .ref("images")
+          .ref("company_images")
           .child(file.name)
           .getDownloadURL()
           .then((imageUrl) => {

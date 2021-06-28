@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import "../css/Header.css";
 import SearchIcon from "@material-ui/icons/Search";
-import Drawer from "@material-ui/core/Drawer";
 import CloseIcon from "@material-ui/icons/Close";
 import MenuIcon from "@material-ui/icons/Menu";
 import ShoppingBasketIcon from "@material-ui/icons/ShoppingBasket";
@@ -9,9 +8,12 @@ import { Link } from "react-router-dom";
 import { useStateValue } from "./StateProvider";
 import { auth } from "../firebase";
 import useWindowDimensions from "./useWindowDimensions";
+import Button from '@material-ui/core/Button';
 
 function Header() {
-  const [{ basket, user }, dispach] = useStateValue();
+  // eslint-disable-next-line
+  const [{ basket, user, adminArr }, dispach] = useStateValue();
+  // eslint-disable-next-line
   const { height, width } = useWindowDimensions();
   const [toggle, setToggle] = useState(false);
 
@@ -21,19 +23,21 @@ function Header() {
     }
   };
   return (
-    <div className={width >= 520 ? "header" : "header_toggle"}>
-      {width >= 520 ? (
+    <div className={width >= 920 ? "header" : "header_toggle"}>
+      {width >= 920 ? (
         <>
           <Link to="/">
             <img className="header__logo" src="logo.jpg" alt="Logo" />
           </Link>
+          {user && adminArr.includes(user?.email) ? <Link to="/admin">
+            <Button style={{ position: "fixed", right: 0, bottom: 0, margin: "0 25px 25px 0", }} variant="contained" color="primary">
+              Admin Paneli
+            </Button>
+          </Link> : ""}
 
-          <div className="header__search">
-            <input className="header__searchInput" type="text" />
-            <SearchIcon className="header__searchIcon" />
-          </div>
+
           <div className="header__nav">
-            <Link to={!user && "/login"}>
+            <Link className={{ textDecoration: "none" }} to={!user && "/login"}>
               <div onClick={handleAuthentication} className="header__option">
                 <span className="header__optionLineOne">
                   Hello {!user ? "Guest" : user?.email}
@@ -43,13 +47,31 @@ function Header() {
                 </span>
               </div>
             </Link>
-            <Link to="/orders">
+            <Link className={{ textDecoration: "none" }} to="/orders">
               <div className="header__option">
                 <span className="header__optionLineOne">Return</span>
                 <span className="header__optionLineTwo">&Orders</span>
               </div>
             </Link>
-            <Link to="/productlist">
+            <Link className={{ textDecoration: "none" }} to="/orders">
+              <div className="header__option">
+                <span className="header__optionLineOne">Return</span>
+                <span className="header__optionLineTwo">&Orders</span>
+              </div>
+            </Link>
+            <Link className={{ textDecoration: "none" }} to="/orders">
+              <div className="header__option">
+                <span className="header__optionLineOne">Return</span>
+                <span className="header__optionLineTwo">&Orders</span>
+              </div>
+            </Link>
+            <Link className={{ textDecoration: "none" }} to="/orders">
+              <div className="header__option">
+                <span className="header__optionLineOne">Return</span>
+                <span className="header__optionLineTwo">&Orders</span>
+              </div>
+            </Link>
+            <Link className={{ textDecoration: "none" }} to="/productlist">
               <div className="header__option">
                 <span className="header__optionLineOne">All</span>
                 <span className="header__optionLineTwo">Products</span>
@@ -63,6 +85,9 @@ function Header() {
                 </span>
               </div>
             </Link>
+          </div><div className="header__search">
+            <input className="header__searchInput" type="text" />
+            <SearchIcon className="header__searchIcon" />
           </div>
         </>
       ) : (
@@ -75,7 +100,7 @@ function Header() {
                 alt="Logo"
               />
             </Link>
-            <div onClick={() => setToggle(!toggle)}>
+            <div style={{ margin: "10px" }} onClick={() => setToggle(!toggle)}>
               {!toggle ? <MenuIcon /> : <CloseIcon />}
             </div>
           </div>
@@ -101,6 +126,24 @@ function Header() {
                   </div>
                 </Link>
                 <Link to="/orders">
+                  <div className="header__option">
+                    <span className="header__optionLineOne">Return</span>
+                    <span className="header__optionLineTwo">&Orders</span>
+                  </div>
+                </Link>
+                <Link className={{ textDecoration: "none" }} to="/orders">
+                  <div className="header__option">
+                    <span className="header__optionLineOne">Return</span>
+                    <span className="header__optionLineTwo">&Orders</span>
+                  </div>
+                </Link>
+                <Link className={{ textDecoration: "none" }} to="/orders">
+                  <div className="header__option">
+                    <span className="header__optionLineOne">Return</span>
+                    <span className="header__optionLineTwo">&Orders</span>
+                  </div>
+                </Link>
+                <Link className={{ textDecoration: "none" }} to="/orders">
                   <div className="header__option">
                     <span className="header__optionLineOne">Return</span>
                     <span className="header__optionLineTwo">&Orders</span>
